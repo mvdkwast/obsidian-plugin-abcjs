@@ -3,6 +3,40 @@ import { MarkdownRenderChild } from 'obsidian';
 import { AUDIO_PARAMS, DEFAULT_OPTIONS, OPTIONS_REGEX, PLAYBACK_CONTROLS_ID, SYNTH_INIT_OPTIONS } from './cfg';
 import { NoteHighlighter, togglePlayingHighlight } from './note_highlighter';
 
+const presets = new Map([
+  ["drums", `L: 1/8
+Q:1/4=80
+%%stretchlast 1
+%%percmap D  pedal-hi-hat x
+%%percmap F  bass-drum-1
+%%percmap E  acoustic-bass-drum
+%%percmap G  low-floor-tom
+%%percmap A  high-floor-tom
+%%percmap B  low-tom
+%%percmap ^B tambourine   triangle
+%%percmap c  acoustic-snare
+%%percmap _c electric-snare
+%%percmap ^c low-wood-block   triangle
+%%percmap =c side-stick x
+%%percmap d  low-tom
+%%percmap =d  low-mid-tom harmonic
+%%percmap ^d hi-wood-block    triangle
+%%percmap e  hi-mid-tom
+%%percmap ^e cowbell      triangle
+%%percmap f  high-tom
+%%percmap ^f ride-cymbal-1
+%%percmap =f ride-bell harmonic
+%%percmap g  closed-hi-hat x
+%%percmap ^g open-hi-hat x
+%%percmap _g pedal-hi-hat x
+%%percmap a  crash-cymbal-1  x
+%%percmap ^a open-triangle triangle
+K:C perc
+U: o = !open!
+U: p = !+!
+%%staves (hands feet)`]
+]);
+
 /**
  * This class abstraction is needed to support load/unload hooks
  * 
@@ -23,7 +57,9 @@ export class PlaybackElement extends MarkdownRenderChild {
 
   onload() {
     const { userOptions, source } = this.parseOptionsAndSource();
-    const renderResp = renderAbc(this.el, source, Object.assign(DEFAULT_OPTIONS, userOptions));
+    const processedSource = this.processCustomDirectives(source);
+    console.log(processedSource);
+    const renderResp = renderAbc(this.el, processedSource, Object.assign(DEFAULT_OPTIONS, userOptions));
     this.enableAudioPlayback(renderResp[0]);
   }
 
@@ -62,6 +98,12 @@ export class PlaybackElement extends MarkdownRenderChild {
     }
 
     return { userOptions, source };
+  }
+
+  processCustomDirectives(source: string) {
+    return source.replace(/^%%preset\s+(\w+)\s*$/gm, (directive, filename) => {
+      return presets.get(filename) || directive;
+    });
   }
 
   renderError(error?: string) {
