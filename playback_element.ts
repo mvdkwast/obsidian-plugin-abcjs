@@ -6,6 +6,7 @@ import { NoteHighlighter, togglePlayingHighlight } from './note_highlighter';
 const presets = new Map([
   ["drums", `L: 1/8
 Q:1/4=80
+m: ç = "<("">)"c
 %%stretchlast 1
 %%percmap D  pedal-hi-hat x
 %%percmap F  bass-drum-1
@@ -58,7 +59,6 @@ export class PlaybackElement extends MarkdownRenderChild {
   onload() {
     const { userOptions, source } = this.parseOptionsAndSource();
     const processedSource = this.processCustomDirectives(source);
-    console.log(processedSource);
     const renderResp = renderAbc(this.el, processedSource, Object.assign(DEFAULT_OPTIONS, userOptions));
     this.enableAudioPlayback(renderResp[0]);
   }
@@ -101,9 +101,43 @@ export class PlaybackElement extends MarkdownRenderChild {
   }
 
   processCustomDirectives(source: string) {
-    return source.replace(/^%%preset\s+(\w+)\s*$/gm, (directive, filename) => {
+    source = source.replace(/^%%preset\s+(\w+)\s*$/gm, (directive, filename) => {
       return presets.get(filename) || directive;
     });
+
+    // gather macros
+    const macros = [...source.matchAll(/^m:\s*(?<name>.*(?=\s))\s*=\s*(?<expansion>.*?)\s*$/gm)]
+        .reduce((map, match) => {
+          map.set(match.groups.name, match.groups.expansion);
+          return map;
+        }, new Map<string, string>());
+
+    console.log("macros", macros);
+
+    const lines = source.split(/\n/);
+
+    // expand macros
+    macros.forEach((expansion, macro) => {
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.match(/^(\w:|%)/)) {
+          continue;
+        }
+        console.log(`replacing ${macro} in ${line} (expansion=${expansion}`);
+
+        const newLine = line.replaceAll(macro, expansion);
+
+        if (newLine !== line) {
+          console.log('new value:', newLine)
+        }
+
+        lines[i] = newLine;
+      }
+
+      console.log(`source after replacing ${macro}`, lines.join("\n"));
+    })
+
+    return lines.join("\n");
   }
 
   renderError(error?: string) {

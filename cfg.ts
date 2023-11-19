@@ -22,6 +22,6 @@ export const SYNTH_INIT_OPTIONS: SynthOptions = {
   // Sound "fonts".
   // These could be distributed locally with the plugin, but fair warning, they're large (GBs for all notes, I think)
   // soundFontUrl: 'https://paulrosen.github.io/midi-js-soundfonts/abcjs/', // bright, crisp
-  soundFontUrl: 'https://paulrosen.github.io/midi-js-soundfonts/FluidR3_GM/', // loud, deeper
-  // soundFontUrl: 'https://paulrosen.github.io/midi-js-soundfonts/MusyngKite/', // muted, more mids?
+  // soundFontUrl: 'https://paulrosen.github.io/midi-js-soundfonts/FluidR3_GM/', // loud, deeper
+  soundFontUrl: 'https://paulrosen.github.io/midi-js-soundfonts/MusyngKite/', // muted, more mids?
 };
